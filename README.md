@@ -46,7 +46,7 @@ Place `sol-pi.json` in `.omp/` (project, when trusted) or `~/.omp/agent/sol-pi.j
 }
 ```
 
-See `sol-pi.example.json`.
+See `sol-pi.example.json`. The object is shared policy with [`kvnloo/sol-pi-hermes`](https://github.com/kvnloo/sol-pi-hermes), not a third plugin ABI — [`POLICY.md`](POLICY.md) and [`schema/sol-pi.policy.v1.schema.json`](schema/sol-pi.policy.v1.schema.json). ObservationPack `FULL_SENDS=2` and `thresholdBytes=10240` stay implementation constants.
 
 OCC stays **off** by default. When you set `"onlineContextCompact": true`, this wrapper registers an OMP settle adapter (`src/occ-adapter.ts`) that maps Pi `agent_settled` onto `session_stop` / `waitForIdle` + `ctx.compact()`. It does **not** import `findCutPoint`. Missing `compact` or `waitForIdle` skips compaction instead of failing load.
 
