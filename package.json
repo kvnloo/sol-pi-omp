@@ -1,0 +1,74 @@
+{
+	"name": "sol-pi-omp",
+	"version": "0.1.0",
+	"description": "Oh My Pi plugin wrapping SoL-Pi Action Fusion and ObservationPack. Never statically imports OCC/findCutPoint.",
+	"type": "module",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/kvnloo/sol-pi-omp.git"
+	},
+	"homepage": "https://github.com/kvnloo/sol-pi-omp",
+	"bugs": {
+		"url": "https://github.com/kvnloo/sol-pi-omp/issues"
+	},
+	"files": [
+		"src",
+		"docs",
+		"README.md",
+		"LICENSE",
+		"THIRD_PARTY_NOTICES.md",
+		"sol-pi.example.json"
+	],
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"test": "node --experimental-strip-types --import ./tests/register-host-stubs.mjs --test tests/*.test.ts",
+		"check": "npm test"
+	},
+	"keywords": [
+		"pi-package",
+		"pi-extension",
+		"oh-my-pi",
+		"omp",
+		"sol-pi"
+	],
+	"omp": {
+		"extensions": [
+			"./src/index.ts"
+		]
+	},
+	"pi": {
+		"extensions": [
+			"./src/index.ts"
+		]
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-agent-core": "*",
+		"@earendil-works/pi-ai": "*",
+		"@earendil-works/pi-coding-agent": "*",
+		"@earendil-works/pi-tui": "*",
+		"typebox": "*"
+	},
+	"peerDependenciesMeta": {
+		"@earendil-works/pi-agent-core": {
+			"optional": true
+		},
+		"@earendil-works/pi-ai": {
+			"optional": true
+		},
+		"@earendil-works/pi-coding-agent": {
+			"optional": true
+		},
+		"@earendil-works/pi-tui": {
+			"optional": true
+		},
+		"typebox": {
+			"optional": true
+		}
+	},
+	"engines": {
+		"node": ">=22.19.0"
+	}
+}
