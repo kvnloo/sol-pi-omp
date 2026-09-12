@@ -2,17 +2,16 @@
  * SPDX-FileCopyrightText: Copyright (c) 2026 Kevin Rajan
  * SPDX-License-Identifier: MIT
  *
- * OCC and EPR are never imported statically. OMP 18.1.17's coding-agent shim
- * does not export findCutPoint, so even `onlineContextCompact: false` in stock
- * SoL-Pi fails at module evaluation. Optional loaders only run when those
- * features are requested AND the host actually exports findCutPoint AND a
- * SoL-Pi tree is available via SOL_PI_ROOT.
+ * Stock SoL-Pi OCC is never imported (it names findCutPoint). When OCC is
+ * enabled, the local adapter maps settle → session_stop / waitForIdle +
+ * compact(). EPR still optional-loads from SOL_PI_ROOT when requested.
  */
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { SolPiOmpConfig } from "./config.ts";
+import { registerOnlineContextCompactAdapter } from "./occ-adapter.ts";
 
 export type ExtensionAPI = {
 	on: (...args: unknown[]) => unknown;
@@ -46,43 +45,28 @@ async function importIfExists(filePath: string): Promise<Record<string, unknown>
 }
 
 export async function registerOptionalMechanisms(pi: ExtensionAPI, config: SolPiOmpConfig): Promise<void> {
-	if (!config.onlineContextCompact && !config.evidencePreservingReducer) return;
+	if (config.onlineContextCompact) {
+		registerOnlineContextCompactAdapter(pi);
+	}
+
+	if (!config.evidencePreservingReducer) return;
 
 	const root = solPiRoot();
 	if (!root) {
 		console.warn(
-			"[sol-pi-omp] OCC/EPR requested but SOL_PI_ROOT is unset; leaving them disabled. Phase 0 ships Action Fusion + ObservationPack only.",
+			"[sol-pi-omp] EPR requested but SOL_PI_ROOT is unset; leaving the reducer disabled. Phase 0 ships Action Fusion + ObservationPack only.",
 		);
 		return;
 	}
 
-	if (config.onlineContextCompact) {
-		const hasCut = await hostExportsFindCutPoint();
-		if (!hasCut) {
-			console.warn(
-				"[sol-pi-omp] host does not export findCutPoint; skipping Online Context Compact (OMP 18.1.17-compatible default).",
-			);
-		} else {
-			const occ = await importIfExists(join(root, "src/sol-pi/extensions/online-context-compact/index.ts"));
-			const register = occ?.registerOnlineContextCompact;
-			if (typeof register === "function") {
-				register(pi, config.cacheWriteReadRatio);
-			} else {
-				console.warn("[sol-pi-omp] SOL_PI_ROOT has no registerOnlineContextCompact; OCC skipped.");
-			}
-		}
-	}
-
-	if (config.evidencePreservingReducer) {
-		const epr = await importIfExists(join(root, "src/sol-pi/extensions/evidence-preserving-reducer/index.ts"));
-		const register = epr?.registerEvidencePreservingReducer;
-		if (typeof register === "function") {
-			register(pi, {
-				reducerModel: config.evidencePreservingReducerModel,
-				reducerProvider: config.evidencePreservingReducerProvider,
-			});
-		} else {
-			console.warn("[sol-pi-omp] SOL_PI_ROOT has no registerEvidencePreservingReducer; EPR skipped.");
-		}
+	const epr = await importIfExists(join(root, "src/sol-pi/extensions/evidence-preserving-reducer/index.ts"));
+	const register = epr?.registerEvidencePreservingReducer;
+	if (typeof register === "function") {
+		register(pi, {
+			reducerModel: config.evidencePreservingReducerModel,
+			reducerProvider: config.evidencePreservingReducerProvider,
+		});
+	} else {
+		console.warn("[sol-pi-omp] SOL_PI_ROOT has no registerEvidencePreservingReducer; EPR skipped.");
 	}
 }

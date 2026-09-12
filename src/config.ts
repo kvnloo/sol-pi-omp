@@ -3,7 +3,8 @@
  * SPDX-License-Identifier: MIT
  *
  * Phase-0 defaults turn Action Fusion and ObservationPack on. OCC and EPR stay
- * off so Oh My Pi 18.1.17 can load this plugin without findCutPoint.
+ * off so Oh My Pi 18.1.17 can load this plugin without findCutPoint. Enabling OCC
+ * uses the local settle adapter, not a static OCC/findCutPoint import.
  */
 
 import { existsSync, readFileSync } from "node:fs";

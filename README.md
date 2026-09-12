@@ -9,7 +9,8 @@ This package:
 - never statically imports `findCutPoint` or OCC
 - phase-0 defaults: `actionFusion` + `observationPack` **on**, OCC/EPR **off**
 - reads `sol-pi.json` from the host `CONFIG_DIR_NAME` (`.omp` on OMP), and also accepts `.pi` for stock Pi trees
-- optionally dynamic-imports OCC/EPR from `SOL_PI_ROOT` only if the host actually exports `findCutPoint`
+- OCC, when enabled, uses a local adapter: settle → `session_stop` / `waitForIdle` + `ctx.compact()` (no `findCutPoint`)
+- missing shim symbols (`modelRegistry.complete`, `isProjectTrusted`, `ctx.ui.setStatus`) are probed and skipped, not thrown
 
 ## Install (Oh My Pi 18.1.17)
 
@@ -47,7 +48,9 @@ Place `sol-pi.json` in `.omp/` (project, when trusted) or `~/.omp/agent/sol-pi.j
 
 See `sol-pi.example.json`.
 
-OCC/EPR stay off unless you set `SOL_PI_ROOT` to a checked-out SoL-Pi tree **and** the host exports `findCutPoint`. Missing exports skip those mechanisms with a warning instead of crashing load.
+OCC stays **off** by default. When you set `"onlineContextCompact": true`, this wrapper registers an OMP settle adapter (`src/occ-adapter.ts`) that maps Pi `agent_settled` onto `session_stop` / `waitForIdle` + `ctx.compact()`. It does **not** import `findCutPoint`. Missing `compact` or `waitForIdle` skips compaction instead of failing load.
+
+EPR still optional-loads from `SOL_PI_ROOT` when enabled. Missing host symbols (`modelRegistry.complete`, `isProjectTrusted`, `ctx.ui.setStatus`) are treated as absent; factory construct and `session_start` do not throw.
 
 ## What this is not
 
@@ -61,4 +64,4 @@ OCC/EPR stay off unless you set `SOL_PI_ROOT` to a checked-out SoL-Pi tree **and
 npm test
 ```
 
-The suite registers a host stub **without** `findCutPoint` and asserts the factory still constructs.
+The suite registers a host stub **without** `findCutPoint` and asserts the factory still constructs. Session-smoke tests cover missing `modelRegistry.complete`, `isProjectTrusted`, and `ctx.ui.setStatus`. Live `omp` is not required.

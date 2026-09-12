@@ -16,6 +16,7 @@ import {
 	OMP_CONFIG_DIR_NAME,
 	type SolPiOmpConfig,
 } from "./config.ts";
+import { isProjectTrusted, probeHostShim } from "./host-shim.ts";
 import { registerOptionalMechanisms, type ExtensionAPI } from "./optional-mechanisms.ts";
 
 export type SolPiOmpConfigLoader = (ctx: { cwd: string; isProjectTrusted?: () => boolean }) => SolPiOmpConfig;
@@ -32,6 +33,7 @@ export function createSolPiOmpExtension(loadConfig?: SolPiOmpConfigLoader) {
 		pi.on("session_start", async (_event: unknown, ctx: { cwd: string; isProjectTrusted?: () => boolean }) => {
 			if (initialized) return;
 			initialized = true;
+			probeHostShim(ctx);
 			const config = loadConfig
 				? loadConfig(ctx)
 				: await loadConfigFromHost(ctx);
@@ -44,7 +46,7 @@ async function loadConfigFromHost(ctx: { cwd: string; isProjectTrusted?: () => b
 	const host = await loadHostCodingAgent();
 	const getAgentDir = host?.getAgentDir;
 	const agentDir = typeof getAgentDir === "function" ? String(getAgentDir()) : undefined;
-	const trusted = typeof ctx.isProjectTrusted === "function" ? ctx.isProjectTrusted() : false;
+	const trusted = isProjectTrusted(ctx);
 	const hostDirName =
 		typeof host?.CONFIG_DIR_NAME === "string" && host.CONFIG_DIR_NAME.length > 0
 			? host.CONFIG_DIR_NAME
@@ -57,4 +59,5 @@ export default function solPiOmpExtension(pi: ExtensionAPI): void {
 }
 
 export { DEFAULT_CONFIG, loadSolPiOmpConfig };
+export { probeHostShim } from "./host-shim.ts";
 export type { SolPiOmpConfig };

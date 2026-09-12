@@ -8,7 +8,7 @@ You are a contributor, not a maintainer. Workers open PRs. They never merge `mai
 2. `npm test` — must pass. The suite stubs a Pi host **without** `findCutPoint`.
 3. One issue, one branch, one PR. Target `preview` for day-pass work (`rollout.yml`); never merge `main`.
 4. Do **not** open PRs against `NVlabs/SoL-Pi` or `can1357/oh-my-pi`. This wrapper exists so those cores stay untouched.
-5. Do **not** statically import `findCutPoint` or `online-context-compact`. Optional OCC/EPR is `import()` only after `hostExportsFindCutPoint()`.
+5. Do **not** statically import `findCutPoint` or stock `online-context-compact`. OCC, when enabled, is the local `src/occ-adapter.ts` settle map (`session_stop` / `waitForIdle` + `ctx.compact()`). EPR is `import()` only from `SOL_PI_ROOT`.
 6. Install for humans: `omp plugin install github:kvnloo/sol-pi-omp`
 
 If you are lost: `skills/orient/SKILL.md`, then `CONTRIBUTING.md`. That is the whole on-ramp.

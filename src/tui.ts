@@ -5,6 +5,7 @@
 
 import type { ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
 import { type Component, Container, Text } from "@earendil-works/pi-tui";
+import { hasUiSetStatus, notifyUi, setUiStatus } from "./host-shim.ts";
 
 export type SolPiTuiMechanism =
 	| "Action Fusion"
@@ -55,17 +56,21 @@ export function showSolPiSavings(
 	saving: string,
 ): void {
 	if (context.mode !== "tui") return;
+	const ui = context.ui;
+	if (!ui) return;
 	const message = `⚡ SoL-Pi · ${mechanism}\nMoney saved · ${saving}`;
-	context.ui.notify(message, "info");
-	context.ui.setStatus(STATUS_KEY, `⚡ ${mechanism} · ${saving}`);
+	notifyUi(ui, message, "info");
+	if (!hasUiSetStatus(ui)) return;
 
-	const previous = statusTimers.get(context.ui);
+	setUiStatus(ui, STATUS_KEY, `⚡ ${mechanism} · ${saving}`);
+
+	const previous = statusTimers.get(ui);
 	if (previous) clearTimeout(previous);
 	const timer = setTimeout(() => {
-		if (statusTimers.get(context.ui) !== timer) return;
-		statusTimers.delete(context.ui);
-		context.ui.setStatus(STATUS_KEY, undefined);
+		if (statusTimers.get(ui) !== timer) return;
+		statusTimers.delete(ui);
+		setUiStatus(ui, STATUS_KEY, undefined);
 	}, STATUS_DURATION_MS);
 	if (typeof timer === "object" && "unref" in timer) timer.unref();
-	statusTimers.set(context.ui, timer);
+	statusTimers.set(ui, timer);
 }
